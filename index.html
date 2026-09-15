@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Айватар · карта историй ИИ-стилиста</title>
+<style>
+  :root{--bg:#f4f2ee;--ink:#1f1f1f;--muted:#6b6b6b;--line:#dcd8d0;--card:#fff;--skel:#fff7e0;--skel-line:#e8b84a;--accent:#1d5fb4;
+        --w:214px;--scale:1}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 -apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+  header{position:sticky;top:0;z-index:30;background:#fffdf9;border-bottom:1px solid var(--line);padding:10px 18px;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+  header h1{font-size:17px;margin:0;font-weight:650}
+  header .sub{color:var(--muted);font-size:12.5px}
+  .ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-left:auto}
+  .ctl button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 10px;font:inherit;font-size:13px;cursor:pointer}
+  .ctl button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .ctl input{border:1px solid var(--line);border-radius:8px;padding:5px 9px;font:inherit;font-size:13px;width:200px}
+  .stat{font-size:13px;color:var(--muted);white-space:nowrap}
+  .stat b{color:var(--ink)}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 14px;padding:8px 18px;font-size:12.5px;color:var(--muted);background:#fbfaf7;border-bottom:1px solid var(--line)}
+  .legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:5px;border:1px solid rgba(0,0,0,.12)}
+  .wrap{overflow:auto;padding:14px 18px 40px}
+  .map{display:grid;grid-template-columns:150px repeat(10,var(--w));gap:8px;transform:scale(var(--scale));transform-origin:0 0;width:max-content}
+  .colhead{position:sticky;top:0;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-height:76px}
+  .colhead b{display:block;font-size:14px}
+  .colhead small{color:var(--muted);font-size:11.5px;line-height:1.3;display:block;margin-top:3px}
+  .colhead .l{color:var(--accent);font-weight:700;font-size:11px;letter-spacing:.06em}
+  .rowhead{position:sticky;left:0;z-index:5;background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 10px;font-size:12.5px;align-self:stretch}
+  .rowhead b{display:block;font-size:13.5px;margin-bottom:3px}
+  .rowhead small{color:var(--muted);display:block;line-height:1.35}
+  .rowhead .hrs{margin-top:6px;font-weight:600;color:var(--ink)}
+  .cell{display:flex;flex-direction:column;gap:6px;min-height:40px;padding:4px;border-radius:10px;background:rgba(0,0,0,.025)}
+  .band-1 .cell{background:var(--skel);outline:1px dashed var(--skel-line)}
+  .band-1 .rowhead{background:var(--skel);border-color:var(--skel-line)}
+  .st{position:relative;background:var(--card);border:1px solid var(--line);border-left:6px solid #ccc;border-radius:8px;padding:7px 8px 7px 9px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.05);transition:transform .08s,box-shadow .08s}
+  .st:hover,.st.pin{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.14);border-color:#bbb}
+  .st.pin{outline:2px solid var(--accent)}
+  .st .t{font-size:12.5px;font-weight:600;line-height:1.3}
+  .st .m{display:flex;justify-content:space-between;margin-top:5px;font-size:11px;color:var(--muted)}
+  .st .ord{position:absolute;top:-7px;right:-6px;background:var(--skel-line);color:#3b2a00;font-size:10.5px;font-weight:700;border-radius:10px;padding:1px 6px;border:1px solid #fff}
+  .st.dim{opacity:.22;filter:grayscale(.6);pointer-events:none}
+  .st.hide{display:none}
+  #tip{position:fixed;z-index:50;max-width:400px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.18);padding:12px 14px;font-size:13px;display:none}
+  #tip.show{display:block}
+  #tip h3{margin:0 0 4px;font-size:14px}
+  #tip .k{color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;margin-top:9px}
+  #tip .tags{margin-top:4px;color:var(--muted);font-size:12px}
+  #tip .x{position:absolute;top:8px;right:10px;border:0;background:none;font-size:16px;cursor:pointer;color:var(--muted);display:none}
+  #tip.pinned .x{display:block}
+  .foot{padding:10px 18px 30px;color:var(--muted);font-size:12.5px;max-width:980px}
+  .foot p{margin:6px 0}
+  @media (max-width:760px){
+    .wrap{padding:10px}
+    .map{grid-template-columns:1fr;transform:none;width:auto}
+    .colhead{display:none}
+    .rowhead{position:static}
+    .cell{padding:6px}
+    .cell::before{content:attr(data-col);font-size:11px;color:var(--accent);font-weight:700;letter-spacing:.05em}
+    .cell.empty{display:none}
+    #tip{left:8px!important;right:8px;top:auto!important;bottom:8px;max-width:none;max-height:60vh;overflow:auto}
+    .ctl input{width:140px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div><h1>Айватар · карта историй ИИ-стилиста</h1>
+    <div class="sub">Горизонталь — шаги пайплайна, вертикаль — срезы улучшений. Жёлтая полоса — рыбий скелет: минимальный сквозной первый релиз. Наведите на стикер, кликните — закрепить. Обновлено <span id="upd"></span>.</div></div>
+  <div class="ctl">
+    <button data-f="1" class="on">Только скелет</button>
+    <button data-f="2">До среза 2</button>
+    <button data-f="3">До среза 3</button>
+    <button data-f="4">Все срезы</button>
+    <input id="q" placeholder="поиск по тексту…">
+    <button id="zoom">−</button>
+    <span class="stat">Видно: <b id="n">0</b> задач, <b id="h">0</b> ч</span>
+  </div>
+</header>
+<div class="legend" id="legend"></div>
+<div class="wrap"><div class="map" id="map"></div></div>
+<div id="tip"><button class="x" title="закрыть">×</button><div id="tipc"></div></div>
+<div class="foot" id="foot"></div>
+<script src="data.js"></script>
+<script>
+(function(){
+  const D=window.USM, map=document.getElementById('map'), tip=document.getElementById('tip'), tipc=document.getElementById('tipc');
+  document.getElementById('upd').textContent=D.updated;
+  const byCol=Object.fromEntries(D.columns.map(c=>[c.id,c]));
+  const byRel=Object.fromEntries(D.releases.map(r=>[r.id,r]));
+  // легенда
+  document.getElementById('legend').innerHTML=Object.entries(D.origins).map(([k,o])=>`<span><i style="background:${o.color}"></i>${o.name}</span>`).join('')
+    +`<span><i style="background:var(--skel);border-color:var(--skel-line)"></i>Рыбий скелет — первый релиз; номер на стикере — порядок выполнения</span>`;
+  // сетка
+  let html='<div class="rowhead" style="top:0;z-index:6"><b>Шаги пайплайна →</b><small>Срезы ↓ — каждый следующий улучшает те же шаги</small></div>';
+  D.columns.forEach(c=>html+=`<div class="colhead"><span class="l">${c.id}</span> <b>${c.name}</b><small>${c.goal}</small></div>`);
+  D.releases.forEach(r=>{
+    html+=`<div class="band-${r.id}" style="display:contents">`;
+    const hrs=D.items.filter(i=>i.rel===r.id).reduce((s,i)=>s+i.h,0);
+    html+=`<div class="rowhead"><b>${r.name}</b><small>${r.goal}</small><small class="hrs">${hrs} ч · ${r.when}</small></div>`;
+    D.columns.forEach(c=>{
+      const items=D.items.filter(i=>i.col===c.id&&i.rel===r.id).sort((a,b)=>(a.order??99)-(b.order??99));
+      html+=`<div class="cell${items.length?'':' empty'}" data-col="${c.id} · ${c.name}">`+items.map(i=>
+        `<div class="st" data-id="${i.id}" style="border-left-color:${D.origins[i.origin].color}">`+
+        (r.id===1&&i.order?`<span class="ord">${i.order}</span>`:'')+
+        `<div class="t">${i.title}</div><div class="m"><span>${i.id}</span><span>${i.h?i.h+' ч':'готово'}</span></div></div>`).join('')+'</div>';
+    });
+    html+='</div>';
+  });
+  map.innerHTML=html;
+  // подсказка
+  let pinned=null;
+  function render(i){
+    const o=D.origins[i.origin], r=byRel[i.rel], c=byCol[i.col];
+    tipc.innerHTML=`<h3>${i.id} · ${i.title}</h3><div class="tags">${c.name} · ${r.name}${i.order?' · шаг '+i.order+' скелета':''} · ${i.h?i.h+' ч':'уже есть'} · <i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${o.color};vertical-align:-1px"></i> ${o.name}</div>
+      <div class="k">Что делаем</div><div>${i.what}</div>
+      <div class="k">Как проверить глазами</div><div>${i.check}</div>
+      <div class="k">Как улучшаем дальше</div><div>${i.next}</div>`;
+  }
+  function place(el){
+    const r=el.getBoundingClientRect(); tip.classList.add('show');
+    const w=tip.offsetWidth,h=tip.offsetHeight; let x=r.right+10,y=r.top;
+    if(x+w>innerWidth-8) x=r.left-w-10; if(x<8) x=8;
+    if(y+h>innerHeight-8) y=Math.max(8,innerHeight-h-8);
+    tip.style.left=x+'px'; tip.style.top=y+'px';
+  }
+  map.addEventListener('mouseover',e=>{const el=e.target.closest('.st'); if(!el||pinned) return; render(D.items.find(i=>i.id===el.dataset.id)); place(el);});
+  map.addEventListener('mouseout',e=>{if(!pinned&&e.target.closest('.st')&&!e.relatedTarget?.closest('.st')) tip.classList.remove('show');});
+  map.addEventListener('click',e=>{const el=e.target.closest('.st'); if(!el) return;
+    if(pinned===el){unpin();return;} if(pinned) pinned.classList.remove('pin');
+    pinned=el; el.classList.add('pin'); tip.classList.add('pinned'); render(D.items.find(i=>i.id===el.dataset.id)); place(el);});
+  function unpin(){if(pinned) pinned.classList.remove('pin'); pinned=null; tip.classList.remove('pinned','show');}
+  tip.querySelector('.x').onclick=unpin;
+  document.addEventListener('keydown',e=>{if(e.key==='Escape') unpin();});
+  document.addEventListener('click',e=>{if(pinned&&!e.target.closest('.st')&&!e.target.closest('#tip')) unpin();});
+  // фильтры
+  let maxRel=1,q='';
+  function apply(){
+    let n=0,h=0;
+    map.querySelectorAll('.st').forEach(el=>{
+      const i=D.items.find(x=>x.id===el.dataset.id);
+      const txt=(i.id+' '+i.title+' '+i.what+' '+i.check+' '+i.next).toLowerCase();
+      const okRel=i.rel<=maxRel, okQ=!q||txt.includes(q);
+      el.classList.toggle('dim',!okRel&&okQ); el.classList.toggle('hide',!okQ);
+      if(okRel&&okQ){n++;h+=i.h;}
+    });
+    document.getElementById('n').textContent=n; document.getElementById('h').textContent=h;
+    document.querySelectorAll('.ctl button[data-f]').forEach(b=>b.classList.toggle('on',+b.dataset.f===maxRel));
+  }
+  document.querySelectorAll('.ctl button[data-f]').forEach(b=>b.onclick=()=>{maxRel=+b.dataset.f; apply();});
+  document.getElementById('q').oninput=e=>{q=e.target.value.trim().toLowerCase(); apply();};
+  const zs=[1,.85,.7,.58]; let zi=0;
+  document.getElementById('zoom').onclick=function(){zi=(zi+1)%zs.length; document.documentElement.style.setProperty('--scale',zs[zi]); this.textContent=zi===zs.length-1?'+':'−';};
+  apply();
+  // подвал
+  const tot=D.items.reduce((s,i)=>s+i.h,0);
+  document.getElementById('foot').innerHTML=`<p><b>Как читать.</b> Стикер — одна атомарная задача с тремя полями: что делаем, как проверить глазами, как улучшаем в следующем срезе. Цвет левой кромки — происхождение работы. Числа на жёлтых стикерах — порядок выполнения скелета: сначала минимальный набор стилей, потом матрица и сбор, потом карточка, цвет и теги по правилам, потом сочетаемость, лук и стенд проверки.</p>
+  <p><b>Принцип срезов.</b> Идём вертикальными срезами: каждый срез трогает все шаги пайплайна понемногу и повышает вероятность, что лук попадёт с первого раза. Нейросети включаются со среза 2, когда база образцов уже собрана и сбалансирована по матрице.</p>
+  <p><b>Объём.</b> Скелет ${D.items.filter(i=>i.rel===1).reduce((s,i)=>s+i.h,0)} ч, всего по карте ${tot} ч. Оценки предварительные, уточняются по итогам каждого среза.</p>`;
+})();
+</script>
+</body>
+</html>
